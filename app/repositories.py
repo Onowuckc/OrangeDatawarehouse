@@ -1,11 +1,28 @@
 from typing import List, Optional
-from .models import Report, StagingReport, User, Role
+from sqlalchemy import select
+from .models import Report, StagingReport, User, Role, UserDepartmentLink
 
-# Minimal repository functions; extend with RBAC-aware queries later
+# Repository functions with RBAC-aware queries
 
 async def list_reports_for_user(user: User, session, role: Role) -> List[Report]:
-    # Simplified: return all reports for now; enforce RBAC later
-    q = await session.execute(Report.select())
+    """Return reports visible to `user` according to their `role`.
+
+    - GeneralManager: sees all reports
+    - DepartmentUser / SeniorManager: sees reports for departments assigned via UserDepartmentLink
+    """
+    if role and role.name == "GeneralManager":
+        q = await session.execute(select(Report))
+        return q.scalars().all()
+
+    # Fetch department ids the user has access to
+    q = await session.execute(
+        select(UserDepartmentLink.department_id).where(UserDepartmentLink.user_id == user.id)
+    )
+    rows = q.scalars().all()
+    if not rows:
+        return []
+
+    q = await session.execute(select(Report).where(Report.department_id.in_(rows)))
     return q.scalars().all()
 
 async def save_staging(payload: dict, session) -> StagingReport:
