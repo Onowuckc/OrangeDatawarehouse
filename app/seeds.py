@@ -3,7 +3,14 @@ from .auth import hash_password
 
 async def seed(session):
     # Minimal seeding for dev purposes
-    deps = [Department(code="FIN", name="Finance"), Department(code="OPS", name="Operations")]
+    deps = [
+        Department(code="SAL", name="Sales"),
+        Department(code="MKT", name="Marketing"),
+        Department(code="SUP", name="SupplyChain"),
+        Department(code="FIN", name="Finance"),
+        Department(code="PROD", name="Production"),
+        Department(code="ADM", name="Admin"),
+    ]
     for d in deps:
         session.add(d)
     roles = [Role(name="DepartmentUser"), Role(name="SeniorManager"), Role(name="GeneralManager")]
