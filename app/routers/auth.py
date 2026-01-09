@@ -64,5 +64,10 @@ async def login(form: UserCreate, db=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Successful user login
-    token = create_access_token(user.username, extra_claims={"user_id": user.id, "role": "User"})
-    return {"access_token": token, "token_type": "bearer", "user_id": user.id, "role": "User"}
+    # Resolve role name
+    qrole = await db.execute(Role.select().where(Role.id == user.role_id))
+    role_obj = qrole.scalars().one_or_none()
+    role_name = role_obj.name if role_obj else "User"
+
+    token = create_access_token(user.username, extra_claims={"user_id": user.id, "role": role_name})
+    return {"access_token": token, "token_type": "bearer", "user_id": user.id, "role": role_name}

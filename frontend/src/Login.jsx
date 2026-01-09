@@ -28,7 +28,19 @@ export function Login(){
   }
 
   useEffect(()=>{
-    // Optionally fetch departments from API in the future
+    async function load(){
+      try{
+        const res = await axios.get('/api/departments/')
+        if(Array.isArray(res.data) && res.data.length) {
+          setDepts(res.data)
+          // ensure selected department exists
+          if(!res.data.find(d => d.code === department)) setDepartment(res.data[0].code)
+        }
+      }catch(err){
+        console.warn('Failed to fetch departments', err)
+      }
+    }
+    load()
   }, [])
 
   return (

@@ -4,6 +4,7 @@ import { ReportForm } from './components/ReportForm'
 import { ReportsList } from './components/ReportsList'
 import logo from './logo.svg'
 import { DebugInfo } from './DebugInfo'
+import { AdminDepartments } from './AdminDepartments'
 
 export default function App(){
   return (
@@ -16,6 +17,7 @@ export default function App(){
       <ReportForm />
       <ReportsList />
       <DebugInfo />
+      { (localStorage.getItem('role') || '').includes('GeneralManager') && <AdminDepartments /> }
     </main>
   )
 }
