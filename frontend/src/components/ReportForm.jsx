@@ -8,17 +8,29 @@ export function ReportForm(){
 
   async function submit(e){
     e.preventDefault()
+    let body
+    try{
+      body = JSON.parse(payload)
+    }catch(parseErr){
+      setMessage('Payload must be valid JSON: ' + parseErr.message)
+      return
+    }
+
     try{
       const token = localStorage.getItem('token')
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
       const res = await axios.post('/api/reports/submit', {
         department_code: department,
-        payload: JSON.parse(payload),
+        payload: body,
       }, { headers })
-      setMessage('Submitted: id=' + res.data.id)
+      // surface debug info for inspection
+      window.__DW_DEBUG__ = Object.assign({}, window.__DW_DEBUG__ || {}, { lastSubmit: res.data })
+      setMessage('Submitted: id=' + (res.data?.id ?? '<no id>'))
     }catch(err){
       console.error(err)
-      setMessage('Submission failed')
+      const msg = err?.response?.data || err.message || String(err)
+      window.__DW_DEBUG__ = Object.assign({}, window.__DW_DEBUG__ || {}, { lastSubmitError: msg })
+      setMessage('Submission failed: ' + msg)
     }
   }
 

@@ -10,9 +10,19 @@ export function ReportsList(){
         const token = localStorage.getItem('token')
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
         const res = await axios.get('/api/reports', { headers })
-        setReports(res.data)
+        // Normalize response: ensure an array. If not, surface debug info so we can inspect payload.
+        if(Array.isArray(res.data)){
+          setReports(res.data)
+        }else{
+          console.warn('Unexpected /api/reports response, expected array:', res.data)
+          window.__DW_DEBUG__ = Object.assign({}, window.__DW_DEBUG__ || {}, { reportsResponse: res.data })
+          setReports([])
+          // store an error for the UI
+          setError('Unexpected response shape from /api/reports (see Debug info)')
+        }
       }catch(err){
         console.error(err)
+        setError(err.message || String(err))
       }
     }
     load()
