@@ -66,3 +66,21 @@ li {
   padding: 0.5rem 0;
   border-bottom: 1px solid #f3f4f6;
 }
+
+/* Buttons */
+.btn { padding: 0.45rem 0.75rem; border-radius:6px; cursor:pointer; border: none }
+.btn-ghost { background: transparent; border: 1px solid #e5e7eb; color: #111827 }
+.btn-danger { background: #ef4444; color: white }
+
+/* Modal */
+.modal-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center }
+.modal { background: white; padding: 1rem 1.25rem; border-radius:8px; width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.12) }
+
+/* Admin list */
+.dept-list { margin-top: 0.75rem }
+.dept-list li { display:flex; justify-content:space-between; align-items:center; gap:8px }
+
+/* Messages / undo */
+.msg { margin: 0.5rem 0; padding:0.5rem; background:#e6f4ff; border:1px solid #cfe9ff }
+.undo { margin: 0.5rem 0; padding:0.5rem; background:#fff7ed; border:1px solid #ffd8a8 }
+

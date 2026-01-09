@@ -10,6 +10,8 @@ class Department(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(index=True, unique=True)
     name: str
+    deleted: bool = Field(default=False, index=True)
+    deleted_at: Optional[datetime] = Field(default=None)
 
 class Role(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
