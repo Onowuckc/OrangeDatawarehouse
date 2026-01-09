@@ -28,12 +28,15 @@ export function ReportsList(){
     load()
   }, [])
 
+  const deptId = Number(localStorage.getItem('dept_id')) || null
+  const filtered = deptId ? reports.filter(r => r.department_id === deptId) : reports
+
   return (
     <section style={{marginTop:20}}>
-      <h3>Reports</h3>
-      {reports.length === 0 && <div>No reports</div>}
+      <h3>Reports {deptId ? `(department id ${deptId})` : ''}</h3>
+      {filtered.length === 0 && <div>No reports</div>}
       <ul>
-        {reports.map(r => (
+        {filtered.map(r => (
           <li key={r.id}>id: {r.id} dept: {r.department_id} status: {r.status}</li>
         ))}
       </ul>

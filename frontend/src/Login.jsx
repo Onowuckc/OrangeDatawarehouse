@@ -12,10 +12,16 @@ export function Login(){
     e.preventDefault()
     try{
       const res = await axios.post('/api/auth/login', { username: email, password, role: department })
-      localStorage.setItem('token', res.access_token || res.data?.access_token)
-      localStorage.setItem('dept', department)
-      setToken(res.access_token || res.data?.access_token)
-      alert('Logged in')
+      const token = res.data?.access_token || res.access_token
+      if(token){
+        localStorage.setItem('token', token)
+        localStorage.setItem('dept', department)
+        if(res.data?.dept_id) localStorage.setItem('dept_id', String(res.data.dept_id))
+        setToken(token)
+        alert('Logged in')
+      }else{
+        alert('Login failed: no token returned')
+      }
     }catch(err){
       alert('Login failed: ' + (err?.response?.data || err?.message || String(err)))
     }

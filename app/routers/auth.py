@@ -34,9 +34,8 @@ async def register(form: UserCreate, db=Depends(get_db)):
 async def login(form: UserCreate, db=Depends(get_db)):
     """Authenticate by department password (env) OR by per-user credentials.
 
-    - For department logins, provide username (email), password and role "DepartmentUser" and a department code will be provided under `UserCreate.role` for backwards compatibility (we'll reuse the role field to pass department code client-side).
+    - For department logins, provide username (email), password and role field is used to pass department code client-side.
     """
-    # Expect role to be department code for department logins, or a real role for user logins
     department_code = form.role
 
     # Try department password env var first: DEPT_PASS_{CODE}
@@ -45,8 +44,15 @@ async def login(form: UserCreate, db=Depends(get_db)):
         env_pw = os.getenv(env_key)
         if form.password == env_pw:
             # authorized as a department user — create a token with department claim
-            token = create_access_token(form.username)
-            return {"access_token": token, "token_type": "bearer", "dept": department_code}
+            token = create_access_token(form.username, extra_claims={"dept": department_code, "role": "DepartmentUser"})
+            resp = {"access_token": token, "token_type": "bearer", "dept": department_code}
+            # If DB session is available, resolve department id and include it
+            if db is not None:
+                q = await db.execute(Department.select().where(Department.code == department_code))
+                dept_obj = q.scalars().one_or_none()
+                if dept_obj:
+                    resp["dept_id"] = dept_obj.id
+            return resp
 
     # Fallback to per-user auth
     q = await db.execute(User.select().where(User.username == form.username))
@@ -58,5 +64,5 @@ async def login(form: UserCreate, db=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Successful user login
-    token = create_access_token(user.username)
-    return {"access_token": token, "token_type": "bearer", "user_id": user.id}
+    token = create_access_token(user.username, extra_claims={"user_id": user.id, "role": "User"})
+    return {"access_token": token, "token_type": "bearer", "user_id": user.id, "role": "User"}
