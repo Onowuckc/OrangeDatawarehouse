@@ -11,7 +11,11 @@ async def seed(session):
         session.add(r)
     await session.commit()
 
-    # Create a default user
-    user = User(username="admin", password_hash=hash_password("admin"), role_id=1)
+    # Create a default user (use correct field name `hashed_password`)
+    q = await session.execute(Role.select().where(Role.name == "GeneralManager"))
+    gm_role = q.scalars().one_or_none()
+    role_id = gm_role.id if gm_role else 1
+
+    user = User(username="admin", hashed_password=hash_password("admin"), role_id=role_id)
     session.add(user)
     await session.commit()
