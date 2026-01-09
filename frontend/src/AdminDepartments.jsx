@@ -27,11 +27,12 @@ export function AdminDepartments(){
     }
   }
 
-  async function del(id){
+  async function del(id, code){
+    if(!window.confirm(`Delete department ${code}? This action cannot be undone.`)) return
     try{
       const token = localStorage.getItem('token')
       await axios.delete(`/api/departments/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-      setMsg('Deleted')
+      setMsg('Deleted ' + code)
       await load()
     }catch(err){
       setMsg('Delete failed: ' + (err?.response?.data || err?.message || String(err)))
@@ -49,7 +50,7 @@ export function AdminDepartments(){
       {msg && <div>{msg}</div>}
       <ul>
         {depts.map(d => (
-          <li key={d.id}>{d.code} - {d.name} <button onClick={()=>del(d.id)}>Delete</button></li>
+          <li key={d.id}>{d.code} - {d.name} <button onClick={()=>del(d.id, d.code)}>Delete</button></li>
         ))}
       </ul>
     </section>
