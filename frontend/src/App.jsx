@@ -2,11 +2,15 @@ import React from 'react'
 import { Login } from './Login'
 import { ReportForm } from './components/ReportForm'
 import { ReportsList } from './components/ReportsList'
+import logo from './logo.svg'
 
 export default function App(){
   return (
-    <main>
-      <h1>Internal Data Warehouse</h1>
+    <main className="container">
+      <header>
+        <img src={logo} alt="DW logo" />
+        <h1>Internal Data Warehouse</h1>
+      </header>
       <Login />
       <ReportForm />
       <ReportsList />
