@@ -3,6 +3,7 @@ import { Login } from './Login'
 import { ReportForm } from './components/ReportForm'
 import { ReportsList } from './components/ReportsList'
 import logo from './logo.svg'
+import { DebugInfo } from './DebugInfo'
 
 export default function App(){
   return (
@@ -14,6 +15,7 @@ export default function App(){
       <Login />
       <ReportForm />
       <ReportsList />
+      <DebugInfo />
     </main>
   )
 }
