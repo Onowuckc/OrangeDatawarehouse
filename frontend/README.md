@@ -6,7 +6,24 @@ Quick steps to run the frontend locally:
 2. npm install
 3. npm run dev
 
-By default the frontend expects the API under `/api` (development proxy). The UI includes:
+By default the frontend expects the API under `/api` (development proxy). If you want to configure the dev proxy, add a `server.proxy` entry in `vite.config.js` like this:
+
+```js
+// vite.config.js
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
+});
+```
+
+The UI includes:
 - `Login` — stores bearer token in `localStorage` (dev-only)
 - `ReportForm` — submit a report payload to `/api/reports/submit`
 - `ReportsList` — list reports (calls `/api/reports`)
