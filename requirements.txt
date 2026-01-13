@@ -1,0 +1,14 @@
+fastapi[all]
+uvicorn[standard]
+sqlmodel
+asyncpg
+psycopg2-binary
+python-dotenv
+passlib[bcrypt]
+PyJWT
+bcrypt
+celery[redis]
+redis
+pytest
+pytest-asyncio
+ruff
