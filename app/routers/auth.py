@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from ..auth import create_access_token, hash_password, verify_password
 from ..schemas import UserCreate
 from ..deps import get_db
-from ..models import Role, User
+from ..models import Role, User, Department
 import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])

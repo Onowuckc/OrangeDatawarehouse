@@ -11,4 +11,5 @@ celery[redis]
 redis
 pytest
 pytest-asyncio
+openpyxl
 ruff

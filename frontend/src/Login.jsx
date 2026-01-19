@@ -23,7 +23,11 @@ export function Login(){
         alert('Login failed: no token returned')
       }
     }catch(err){
-      alert('Login failed: ' + (err?.response?.data || err?.message || String(err)))
+      const serverData = err?.response?.data
+      const detail = serverData && typeof serverData === 'object' ? (serverData.detail || JSON.stringify(serverData)) : (err?.message || String(err))
+      console.error('Login error', err)
+      window.__DW_DEBUG__ = Object.assign({}, window.__DW_DEBUG__ || {}, { lastLoginError: serverData || err?.message })
+      alert('Login failed: ' + detail)
     }
   }
 

@@ -6,7 +6,7 @@ Quick steps to run the frontend locally:
 2. npm install
 3. npm run dev
 
-By default the frontend expects the API under `/api` (development proxy). If you want to configure the dev proxy, add a `server.proxy` entry in `vite.config.js` like this:
+By default the frontend expects the API under `/api` (development proxy). In `vite.config.js` the proxy is configured to **strip the `/api` prefix** so your client requests like `/api/auth/login` are forwarded to the backend path `/auth/login`:
 
 ```js
 // vite.config.js
@@ -17,6 +17,8 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
+        // rewrite removes the `/api` prefix when proxying to the backend
+        rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
   }

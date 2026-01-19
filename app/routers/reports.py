@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy import select
 from ..schemas import ReportSubmit, ReportOut
 from ..deps import get_db, get_current_principal
 from ..services.ftl import process_report
 from ..repositories import save_staging, save_report, list_reports_for_user
 from ..models import Department, User, UserDepartmentLink, Role, Report
+import csv
+import io
+from openpyxl import load_workbook
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -54,6 +57,92 @@ async def submit_report(payload: ReportSubmit, db=Depends(get_db), principal=Dep
         "uploader_id": user_id,
         "report_date": payload.report_date,
         "version": payload.version,
+        "status": "ready",
+        "normalized": normalized["normalized"],
+    }
+    report = await save_report(report_payload, db)
+
+    return report
+
+@router.post("/submit-file", response_model=ReportOut)
+async def submit_report_file(
+    department_code: str = Form(...),
+    file: UploadFile = File(...),
+    filename: str | None = Form(None),
+    report_date: str | None = Form(None),
+    version: str | None = Form(None),
+    db=Depends(get_db),
+    principal=Depends(get_current_principal),
+):
+    # Resolve department
+    q = await db.execute(select(Department).where(Department.code == department_code))
+    dept = q.scalars().one_or_none()
+    if not dept:
+        raise HTTPException(status_code=400, detail="Unknown department")
+
+    # Authorization: general managers or department owners
+    role = principal.get("role")
+    user_id = principal.get("user_id")
+    dept_claim = principal.get("dept")
+
+    allowed = False
+    if role in ("GeneralManager", "CEO"):
+        allowed = True
+    elif dept_claim and dept_claim == department_code:
+        allowed = True
+    elif user_id:
+        q = await db.execute(select(UserDepartmentLink.department_id).where(UserDepartmentLink.user_id == user_id))
+        allowed_ids = q.scalars().all()
+        if dept.id in allowed_ids:
+            allowed = True
+
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Not authorized to submit for this department")
+
+    # Parse file: CSV or Excel
+    parsed = None
+    filename = filename or getattr(file, 'filename', None)
+    content_type = (file.content_type or '').lower()
+
+    data = await file.read()
+
+    if 'csv' in content_type or (filename and filename.lower().endswith('.csv')):
+        text = data.decode('utf-8')
+        reader = csv.DictReader(io.StringIO(text))
+        parsed = [row for row in reader]
+    elif 'sheet' in content_type or filename and filename.lower().endswith(('.xls', '.xlsx')):
+        wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        ws = wb.active
+        rows = list(ws.values)
+        if not rows:
+            parsed = []
+        else:
+            headers = [str(h) for h in rows[0]]
+            parsed = []
+            for r in rows[1:]:
+                parsed.append({headers[i]: r[i] for i in range(len(headers))})
+    else:
+        raise HTTPException(status_code=400, detail='Unsupported file type. Please upload CSV or XLSX')
+
+    # Persist to staging
+    staging_payload = {
+        "department_id": dept.id,
+        "uploader_id": user_id,
+        "raw_payload": parsed,
+        "filename": filename,
+        "status": "received",
+    }
+    staging = await save_staging(staging_payload, db)
+
+    # Run transform (sync for now)
+    submit_model = ReportSubmit(department_code=department_code, payload=parsed, filename=filename, report_date=report_date, version=version)
+    normalized = process_report(submit_model)
+
+    report_payload = {
+        "department_id": dept.id,
+        "uploader_id": user_id,
+        "report_date": report_date,
+        "version": version,
         "status": "ready",
         "normalized": normalized["normalized"],
     }

@@ -3,6 +3,7 @@ import axios from 'axios'
 
 export function ReportsList(){
   const [reports, setReports] = useState([])
+  const [error, setError] = useState('')
 
   useEffect(()=>{
     async function load(){
@@ -34,6 +35,7 @@ export function ReportsList(){
   return (
     <section style={{marginTop:20}}>
       <h3>Reports {deptId ? `(department id ${deptId})` : ''}</h3>
+      {error && <div style={{color:'red'}}>{error}</div>}
       {filtered.length === 0 && <div>No reports</div>}
       <ul>
         {filtered.map(r => (

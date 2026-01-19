@@ -3,27 +3,24 @@ import axios from 'axios'
 
 export function ReportForm(){
   const [department, setDepartment] = useState('FIN')
-  const [payload, setPayload] = useState('{"k": "v"}')
+  const [file, setFile] = useState(null)
   const [message, setMessage] = useState('')
 
   async function submit(e){
     e.preventDefault()
-    let body
-    try{
-      body = JSON.parse(payload)
-    }catch(parseErr){
-      setMessage('Payload must be valid JSON: ' + parseErr.message)
+    if(!file){
+      setMessage('Please select a CSV or XLSX file to upload')
       return
     }
 
     try{
       const token = localStorage.getItem('token')
       const headers = token ? { Authorization: `Bearer ${token}` } : {}
-      const res = await axios.post('/api/reports/submit', {
-        department_code: department,
-        payload: body,
-      }, { headers })
-      // surface debug info for inspection
+      const fd = new FormData()
+      fd.append('department_code', department)
+      fd.append('file', file)
+
+      const res = await axios.post('/api/reports/submit-file', fd, { headers })
       window.__DW_DEBUG__ = Object.assign({}, window.__DW_DEBUG__ || {}, { lastSubmit: res.data })
       setMessage('Submitted: id=' + (res.data?.id ?? '<no id>'))
     }catch(err){
@@ -36,16 +33,16 @@ export function ReportForm(){
 
   return (
     <form onSubmit={submit} style={{marginTop:20}}>
-      <h3>Submit Report</h3>
+      <h3>Submit Report (CSV/XLSX)</h3>
       <div>
         <label>Department code</label>
         <input value={department} onChange={(e)=>setDepartment(e.target.value)} />
       </div>
       <div>
-        <label>Payload (JSON)</label>
-        <textarea value={payload} onChange={(e)=>setPayload(e.target.value)} rows={6} cols={60} />
+        <label>File</label>
+        <input type="file" accept=".csv,.xlsx,.xls" onChange={(e)=>setFile(e.target.files[0])} />
       </div>
-      <button type="submit">Submit</button>
+      <button type="submit">Upload</button>
       <div>{message}</div>
     </form>
   )

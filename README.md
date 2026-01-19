@@ -65,7 +65,7 @@ This short guide shows how to log in using a department password (env var `DEPT_
 Add a line to your `.env` (or set the env var directly):
 
 ```
-DEPT_PASS_SALES=supersecret
+DEPT_PASS_SAL=sales-secret
 ```
 
 The app uses `python-dotenv` in development so a `.env` file at the project root will be loaded.
@@ -76,13 +76,13 @@ Use the `/auth/login` endpoint. The `role` field is used to pass the department 
 ```bash
 curl -s -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"reporter@example.com","password":"supersecret","role":"SALES"}'
+  -d '{"username":"reporter@example.com","password":"sales-secret","role":"SAL"}'
 ```
 
 A successful response includes an `access_token` (and `dept` and optional `dept_id`):
 
 ```json
-{"access_token":"<token>","token_type":"bearer","dept":"SALES","dept_id":1}
+{"access_token":"<token>","token_type":"bearer","dept":"SAL","dept_id":1}
 ```
 
 ### 3) Submit a report
@@ -93,7 +93,7 @@ curl -s -X POST http://localhost:8000/reports/submit \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "department_code":"SALES",
+    "department_code":"SAL",
     "payload": {"orders": [{"id": 1, "amount": 123.45}]},
     "filename": "sales-2026-01.json",
     "report_date":"2026-01-12T00:00:00Z",
@@ -102,6 +102,16 @@ curl -s -X POST http://localhost:8000/reports/submit \
 ```
 
 A successful response will return the saved normalized report object.
+
+### Example: upload CSV / Excel file via curl
+
+```bash
+curl -v -X POST http://localhost:8000/reports/submit-file \
+  -H "Authorization: Bearer <token>" \
+  -F "department_code=SAL" \
+  -F "file=@/path/to/sales-2026-01.csv" \
+  -F "filename=sales-2026-01.csv"
+```
 
 > Tip: To test per-user credentials instead, register a user via `/auth/register` and log in with `/auth/login` using the user's `username` and `password`.
 
